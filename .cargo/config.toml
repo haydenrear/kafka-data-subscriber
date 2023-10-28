@@ -1,0 +1,10 @@
+[env]
+LOGGING_DIR = "/Users/hayde/IdeaProjects/rust-spring-knockoff/log_out/log.log"
+KNOCKOFF_LOGGING_TEST_FILE = "/Users/hayde/IdeaProjects/kafka-data-subscriber/log_out/knockoff_logging_test.log"
+PROJECT_BASE_DIRECTORY = "/Users/hayde/IdeaProjects/kafka-data-subscriber"
+MODULE_MACRO_REGISTRY_INDEX_URI = "http://localhost:1234/git/index"
+KNOCKOFF_DEV = "true"
+[registries]
+estuary = { index = "http://localhost:1234/git/index" }
+
+

@@ -1,0 +1,17 @@
+[package]
+name = "kafka-data-subscriber"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rdkafka = "0.34.0"
+tokio = {version = "1.28.0", features = ["full"] }
+serde_json = "1.0.96"
+serde = "1.0.160"
+toml = "0.8.4"
+knockoff_tokio_util = {path = "../rust-spring-knockoff/knockoff_tokio_util"}
+knockoff_logging = {path = "../rust-spring-knockoff/knockoff_logging" }
+async-task = "4.5.0"
+async-executor = "1.6.0"
