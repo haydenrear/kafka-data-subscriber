@@ -1,2 +1,3 @@
-mod publisher_test;
 
+mod publisher_test;
+mod kafka_test_containers;

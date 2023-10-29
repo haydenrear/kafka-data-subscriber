@@ -4,7 +4,7 @@ use knockoff_logging::info;
 use rdkafka::util::TokioRuntime;
 use serde::{Deserialize, Serialize};
 use crate::data_publisher::{DataPublisher, MessageSource, MessageSourceImpl};
-use crate::kafka_data_publisher::{KafkaDataPublisher, KafkaSenderHandle};
+use crate::data_publisher::{KafkaDataPublisher, KafkaSenderHandle};
 use crate::{EventReceiver, NetworkEvent};
 
 use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;

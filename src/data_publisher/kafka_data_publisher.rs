@@ -7,7 +7,7 @@ use std::thread::sleep;
 use std::time::Duration;
 use knockoff_logging::{error, info};
 use crate::data_publisher::DataPublisher;
-use crate::kafka_client_provider::{KafkaClientProvider, MessageClientProvider};
+use crate::config::{KafkaClientProvider, MessageClientProvider};
 use crate::{ConsumerSink, JoinableConsumerSink, NetworkEvent};
 use crate::sender::SenderHandle;
 

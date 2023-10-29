@@ -9,7 +9,7 @@ use rdkafka::{ClientConfig, Offset, TopicPartitionList};
 use std::time::Duration;
 use rdkafka::config::FromClientConfig;
 use crate::config::ConfigurationProperties;
-use crate::kafka_data_subscriber::KafkaConsumerContainer;
+use crate::config::KafkaConsumerContainer;
 
 use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;
 use knockoff_logging::knockoff_logging::logging_facade::LoggingFacade;

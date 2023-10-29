@@ -6,6 +6,10 @@ use serde::Deserialize;
 use kafka::KafkaConfiguration;
 
 pub(crate) mod kafka;
+pub mod kafka_client_provider;
+
+pub use self::kafka::*;
+pub use self::kafka_client_provider::*;
 
 
 #[derive(Deserialize, Debug)]

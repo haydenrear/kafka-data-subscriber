@@ -7,15 +7,13 @@ use serde::Deserialize;
 use tokio::task::JoinHandle;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-pub mod kafka_data_subscriber;
 pub mod data_subscriber;
 pub mod config;
 pub mod data_publisher;
-pub mod kafka_data_publisher;
-mod kafka_client_provider;
 pub mod receiver;
 pub mod sender;
 
+#[cfg(test)]
 mod test;
 
 
@@ -68,7 +66,8 @@ pub trait NetworkEvent: for<'a> Deserialize<'a> + Send + Sync {
 #[derive(Default)]
 pub struct EventReceiver<T>
 where
-    T: NetworkEvent {
+    T: NetworkEvent
+{
     pub receiver: Option<Receiver<T>>
 }
 

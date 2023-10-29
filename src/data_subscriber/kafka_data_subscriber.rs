@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 use knockoff_logging::{error, info};
 use rdkafka::Message;
@@ -13,7 +13,7 @@ use crate::data_subscriber::DataSubscriber;
 use crate::{ConsumerSink, EventReceiver, NetworkEvent};
 use knockoff_tokio_util::run_blocking;
 
-use crate::kafka_client_provider::{KafkaClientProvider, MessageClientProvider};
+use crate::config::{KafkaClientProvider, MessageClientProvider};
 use crate::receiver::ReceiverHandler;
 
 
@@ -21,12 +21,6 @@ use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;
 use knockoff_logging::knockoff_logging::logging_facade::LoggingFacade;
 use knockoff_logging::knockoff_logging::log_level::LogLevel;
 use knockoff_logging::knockoff_logging::logger::Logger;
-
-
-#[derive(Default, Clone)]
-pub struct KafkaConsumerContainer {
-    consumers: Arc<Mutex<Vec<(Arc<StreamConsumer>, Vec<String>)>>>
-}
 
 
 pub struct KafkaMessageSubscriber<E,
