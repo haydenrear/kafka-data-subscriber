@@ -1,20 +1,17 @@
 use std::default::Default;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
+use std::iter::FlatMap;
 use std::marker::PhantomData;
+use std::result::IntoIter;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
-use knockoff_logging::{error, info};
 use crate::data_publisher::DataPublisher;
 use crate::config::{KafkaClientProvider, MessageClientProvider};
 use crate::{ConsumerSink, JoinableConsumerSink, NetworkEvent};
 use crate::sender::SenderHandle;
 
-use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;
-use knockoff_logging::knockoff_logging::logging_facade::LoggingFacade;
-use knockoff_logging::knockoff_logging::log_level::LogLevel;
-use knockoff_logging::knockoff_logging::logger::Logger;
 use rdkafka::config::FromClientConfig;
 use rdkafka::error::KafkaError;
 use rdkafka::message::OwnedMessage;
@@ -25,6 +22,12 @@ use tokio::sync::mpsc::Receiver;
 use tokio::task::JoinHandle;
 use crate::EventReceiver;
 use crate::receiver::ReceiverHandler;
+
+use std::sync::Mutex;
+use knockoff_logging::*;
+use crate::logger_lazy;
+
+import_logger!("kafka_data_publisher.rs");
 
 pub struct KafkaMessagePublisher<
     E, EventReceiverHandlerT, ConsumerSinkT
@@ -58,6 +61,16 @@ impl<E: NetworkEvent + Debug + 'static> KafkaSenderHandle<E, TokioRuntime> {
             initialized: false,
         }
     }
+
+    pub fn with_client_provider(kafka_client_provider: KafkaClientProvider) -> Self {
+        Self {
+            client_provider: kafka_client_provider,
+            phantom_1: PhantomData::default() ,
+            phantom: PhantomData::default(),
+            producer: vec![],
+            initialized: false,
+        }
+    }
 }
 
 impl<E: NetworkEvent + Debug + 'static, JoinableConsumerSinkT: JoinableConsumerSink>
@@ -84,6 +97,7 @@ pub struct AggregatedKafkaErrors {
 
 impl Display for AggregatedKafkaErrors {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&format!("Aggregated Kafka Errors: \nerrors: {:?}\nsuccesses: {:?}", &self.errors, &self.successes))?;
         Ok(())
     }
 }
@@ -100,33 +114,21 @@ impl<E, SinkT> SenderHandle<E, KafkaPublishResult, AggregatedKafkaErrors, SinkT>
 where E: NetworkEvent + Debug + Serialize + 'static, SinkT: JoinableConsumerSink + Send + Sync
 {
     async fn send(&mut self, event: E, sink: Arc<SinkT>) -> Result<KafkaPublishResult, AggregatedKafkaErrors> {
-        info!("Sending message");
         self.initialize().await;
-        info!("Initialized!");
         let mut kafka_errs = AggregatedKafkaErrors::default();
         let mut kafka_publish_result = KafkaPublishResult::default();
         let mut join_handles: Vec<JoinHandle<(FutureProducer, Option<KafkaError>, Option<OwnedMessage>, Option<i32>, Option<i64>)>> = vec![];
-        for (topic, event, key) in serde_json::to_string::<E>(&event)
-            .into_iter()
-            .flat_map(|event| E::publish_topics().iter()
-                .map(|topic| (String::from(*topic), event.clone(), String::from(topic.clone())))
-                .collect::<Vec<(String, String, String)>>()
-            ).into_iter() {
+        for (topic, event, key) in Self::create_to_send_events(&event) {
             if self.producer.len() != 0 {
                 self.spawn_from_producers(sink.clone(), &mut join_handles, &topic, &event, &key);
             } else if join_handles.len() != 0 {
                 Self::spawn_from_join_handle(sink.clone(), &mut kafka_errs, &mut kafka_publish_result, &mut join_handles, &topic, &event, &key).await;
             } else {
                 loop {
-                    if self.producer.len() != 0 {
-                        self.spawn_from_producers(sink.clone(), &mut join_handles, &topic, &event, &key);
+                    if self.get_next_producer(sink.clone(), &mut kafka_errs, &mut kafka_publish_result, &mut join_handles, &topic, &event, &key).await {
                         break;
-                    } else if join_handles.len() != 0 {
-                        Self::spawn_from_join_handle(
-                            sink.clone(), &mut kafka_errs, &mut kafka_publish_result,
-                            &mut join_handles,
-                            &topic, &event, &key).await;
-                        break;
+                    } else {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
                     }
                 }
             }
@@ -145,8 +147,11 @@ where E: NetworkEvent + Debug + Serialize + 'static, SinkT: JoinableConsumerSink
     }
 }
 
+impl<E, SinkT> KafkaSenderHandle<E, SinkT>
+    where
+        E: 'static + Debug + NetworkEvent + Serialize,
+        SinkT: JoinableConsumerSink + Send + Sync {
 
-impl<E, SinkT> KafkaSenderHandle<E, SinkT> where E: 'static + Debug + NetworkEvent, SinkT: JoinableConsumerSink + Send + Sync {
     async fn spawn_from_join_handle(
         sink: Arc<SinkT>,
         kafka_errs: &mut AggregatedKafkaErrors,
@@ -162,6 +167,31 @@ impl<E, SinkT> KafkaSenderHandle<E, SinkT> where E: 'static + Debug + NetworkEve
         Self::add_results(kafka_errs, kafka_publish_result, err, msg, i, j);
         Self::spawn_send_task(sink, &mut join_handles, topic, event, key,
                               producer_taken);
+    }
+    fn create_to_send_events(event: &E) -> Vec<(String, String, String)> {
+        serde_json::to_string::<E>(&event)
+            .into_iter()
+            .flat_map(|event| E::publish_topics().iter()
+                .map(|topic| (String::from(*topic), event.clone(), String::from(topic.clone())))
+                .collect::<Vec<(String, String, String)>>()
+            )
+            .into_iter()
+            .collect()
+    }
+
+
+    async fn get_next_producer(&mut self, sink: Arc<SinkT>, mut kafka_errs: &mut AggregatedKafkaErrors, mut kafka_publish_result: &mut KafkaPublishResult, mut join_handles: &mut Vec<JoinHandle<(FutureProducer, Option<KafkaError>, Option<OwnedMessage>, Option<i32>, Option<i64>)>>, topic: &String, event: &String, key: &String) -> bool {
+        if self.producer.len() != 0 {
+            self.spawn_from_producers(sink.clone(), &mut join_handles, &topic, &event, &key);
+            return true;
+        } else if join_handles.len() != 0 {
+            Self::spawn_from_join_handle(
+                sink.clone(), &mut kafka_errs, &mut kafka_publish_result,
+                &mut join_handles,
+                &topic, &event, &key).await;
+            return true;
+        }
+        false
     }
 
     fn create_future_record<'a>(topic: &'a str, event: &'a String, key: &'a String) -> FutureRecord<'a, String, String> {

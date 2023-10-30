@@ -1,4 +1,3 @@
-use std::time::Duration;
 use crate::config::KafkaClientProvider;
 use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication};
 use rdkafka::client::DefaultClientContext;

@@ -3,9 +3,16 @@
 use std::fmt::Debug;
 use std::future::Future;
 use rdkafka::util::TokioRuntime;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 use tokio::sync::mpsc::{Receiver, Sender};
+use lazy_static::lazy_static;
+use knockoff_env::project_directory;
+use std::sync::Mutex;
+
+use knockoff_logging::*;
+
+import_logger_root!("lib.rs");
 
 pub mod data_subscriber;
 pub mod config;
@@ -57,7 +64,7 @@ impl ConsumerSink for TokioRuntime {
     }
 }
 
-pub trait NetworkEvent: for<'a> Deserialize<'a> + Send + Sync {
+pub trait NetworkEvent: for<'a> Deserialize<'a> + Serialize + Send + Sync {
     fn topic_matcher() -> &'static str;
     fn publish_topics() -> Vec<&'static str>;
 }

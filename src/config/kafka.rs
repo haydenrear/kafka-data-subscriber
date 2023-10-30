@@ -13,7 +13,7 @@ pub struct KafkaConfiguration {
 impl Default for KafkaConfiguration {
     fn default() -> Self {
         Self {
-            hosts: vec!["localhost:9093".to_string()],
+            hosts: vec!["localhost:9092".to_string()],
             consumer_group_id: "consumer".to_string(),
             client_id: "nn-fe".to_string()
         }

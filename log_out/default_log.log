@@ -1,0 +1,36 @@
+log level: Info
+message: Testing publisher
+id: publisher_test.rs
+log level: Info
+message: Subscribing to topics: ["test_one", "test_two"].
+id: kafka_data_subscriber.rs
+log level: Info
+message: Kafka result was error: Some(KafkaError (Message consumption error: UnknownTopicOrPartition (Broker: Unknown topic or partition)))
+id: publisher_test.rs
+log level: Info
+message: Did not find test event!
+id: publisher_test.rs
+log level: Info
+message: Kafka result was error: Some(KafkaError (Message consumption error: UnknownTopicOrPartition (Broker: Unknown topic or partition)))
+id: publisher_test.rs
+log level: Info
+message: Did not find test event!
+id: publisher_test.rs
+log level: Info
+message: Initializing producers. 0 producers existed before.
+id: kafka_data_publisher.rs
+log level: Info
+message: Creating topics: [NewTopic { name: "test_one", num_partitions: 1, replication: Fixed(1), config: [] }, NewTopic { name: "test_two", num_partitions: 1, replication: Fixed(1), config: [] }]
+id: kafka_data_subscriber.rs
+log level: Info
+message: Created topics: [Err(("test_one", TopicAlreadyExists)), Err(("test_two", TopicAlreadyExists))]
+id: kafka_data_subscriber.rs
+log level: Info
+message: Initialized producers. 1 producers existed after.
+id: kafka_data_publisher.rs
+log level: Info
+message: Kafka result was ok.
+id: publisher_test.rs
+log level: Info
+message: Found test event: hello!!
+id: publisher_test.rs

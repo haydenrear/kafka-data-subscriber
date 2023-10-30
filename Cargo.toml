@@ -17,3 +17,5 @@ async-task = "4.5.0"
 async-executor = "1.6.0"
 testcontainers = "0.15.0"
 wait_for = {path = "../rust-spring-knockoff/wait_for"}
+lazy_static = "1.4.0"
+knockoff_env = {path = "../rust-spring-knockoff/knockoff_env"}

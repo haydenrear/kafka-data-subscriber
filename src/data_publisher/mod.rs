@@ -2,18 +2,18 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::sync::Arc;
 use std::time::Duration;
-use knockoff_logging::{error, info};
 use crate::config::MessageClientProvider;
 use crate::{ConsumerSink, EventSender, JoinableConsumerSink, NetworkEvent};
 use crate::receiver::ReceiverHandler;
 use crate::sender::SenderHandle;
 
-use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;
-use knockoff_logging::knockoff_logging::logging_facade::LoggingFacade;
-use knockoff_logging::knockoff_logging::log_level::LogLevel;
-use knockoff_logging::knockoff_logging::logger::Logger;
 use tokio::sync::mpsc::error::SendError;
 use crate::EventReceiver;
+use std::sync::Mutex;
+use knockoff_logging::*;
+use crate::logger_lazy;
+
+import_logger!("data_publisher.rs");
 
 pub mod kafka_data_publisher;
 

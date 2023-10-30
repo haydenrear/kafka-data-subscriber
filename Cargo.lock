@@ -27,7 +27,7 @@ dependencies = [
  "async-task",
  "concurrent-queue",
  "fastrand",
- "futures-lite",
+ "futures-lite 1.13.0",
  "slab",
 ]
 
@@ -117,6 +117,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "codegen_utils"
 version = "0.1.4"
 dependencies = [
+ "knockoff_env",
  "syn 1.0.109",
 ]
 
@@ -286,6 +287,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-lite"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c1155db57329dca6d018b61e76b1488ce9a2e5e44028cac420a5898f4fcef63"
+dependencies = [
+ "fastrand",
+ "futures-core",
+ "futures-io",
+ "memchr",
+ "parking",
+ "pin-project-lite",
+ "waker-fn",
+]
+
+[[package]]
 name = "futures-macro"
 version = "0.3.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -408,8 +424,10 @@ version = "0.1.0"
 dependencies = [
  "async-executor",
  "async-task",
+ "knockoff_env",
  "knockoff_logging",
  "knockoff_tokio_util",
+ "lazy_static",
  "rdkafka",
  "serde",
  "serde_json",
@@ -420,11 +438,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "knockoff_env"
+version = "0.1.0"
+
+[[package]]
 name = "knockoff_logging"
 version = "0.1.4"
 dependencies = [
  "codegen_utils",
  "lazy_static",
+ "log",
  "wait_for",
 ]
 
@@ -546,6 +569,12 @@ name = "once_cell"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
+
+[[package]]
+name = "parking"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb813b8af86854136c6922af0598d719255ecb2179515e6e7730d468f05c9cae"
 
 [[package]]
 name = "parking_lot"
@@ -971,8 +1000,15 @@ name = "wait_for"
 version = "0.1.4"
 dependencies = [
  "async-executor",
+ "futures-lite 2.0.0",
  "tokio",
 ]
+
+[[package]]
+name = "waker-fn"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3c4517f54858c779bbcbf228f4fca63d121bf85fbecb2dc578cdf4a39395690"
 
 [[package]]
 name = "wasi"

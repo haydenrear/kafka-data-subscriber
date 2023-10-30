@@ -1,5 +1,5 @@
 [kafka]
-hosts = ["localhost:9094"]
+hosts = ["localhost:9093"]
 consumer_group_id = "nn-fe"
 client_id = "nn-fe"
 

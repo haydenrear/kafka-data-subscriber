@@ -3,7 +3,6 @@ use rdkafka::admin::{AdminClient, AdminOptions, NewTopic, TopicReplication, Topi
 use rdkafka::client::DefaultClientContext;
 use rdkafka::consumer::{Consumer, DefaultConsumerContext, StreamConsumer};
 use rdkafka::error::KafkaError;
-use knockoff_logging::{error, info};
 use rdkafka::producer::FutureProducer;
 use rdkafka::{ClientConfig, Offset, TopicPartitionList};
 use std::time::Duration;
@@ -11,11 +10,11 @@ use rdkafka::config::FromClientConfig;
 use crate::config::ConfigurationProperties;
 use crate::config::KafkaConsumerContainer;
 
-use knockoff_logging::knockoff_logging::default_logging::StandardLoggingFacade;
-use knockoff_logging::knockoff_logging::logging_facade::LoggingFacade;
-use knockoff_logging::knockoff_logging::log_level::LogLevel;
-use knockoff_logging::knockoff_logging::logger::Logger;
-use crate::NetworkEvent;
+use std::sync::Mutex;
+use crate::{NetworkEvent};
+use crate::logger_lazy;
+use knockoff_logging::*;
+import_logger!("kafka_data_subscriber.rs");
 
 pub struct KafkaClientProvider {
     pub kafka_client: Option<AdminClient<DefaultClientContext>>,
@@ -59,9 +58,9 @@ impl KafkaClientProvider {
             client_config.create_with_context(DefaultConsumerContext);
 
         let consumer = consumer.map(|consumer| {
-            let topic_to_subcribe = Self::fetch_topic_patterns(&topics, &consumer);
+            let topics_to_subscribe = Self::fetch_topic_patterns(&topics, &consumer);
             info!("Subscribing to topics: {:?}.", &topics);
-            let subscribe_topics_slice = topic_to_subcribe.iter()
+            let subscribe_topics_slice = topics_to_subscribe.iter()
                 .map(|t| t.as_str())
                 .collect::<Vec<&str>>();
 
@@ -99,7 +98,7 @@ impl KafkaClientProvider {
         FutureProducer::from_config(&client_config)
     }
 
-    fn subscribe_to_topics(consumer: &StreamConsumer, subscribe_topics_slice: &[&str]) {
+    pub(crate) fn subscribe_to_topics(consumer: &StreamConsumer, subscribe_topics_slice: &[&str]) {
         let _ = consumer.subscribe(subscribe_topics_slice)
             .or_else(|e| {
                 error!("Error subscribing to topics: {:?}.", e);
