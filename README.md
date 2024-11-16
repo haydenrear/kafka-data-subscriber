@@ -1,1 +1,1 @@
-Zero-Copy Kafka subscribers and producers in Rust library - implement Receiver and Sender. 
+Kafka subscribers and producers in Rust library - implement Receiver and Sender. 
